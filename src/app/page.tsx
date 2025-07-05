@@ -1,6 +1,8 @@
 'use client'
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Evento } from "./Interfaces/IEvento"
+import MostrarEventos from "./MostrarEventos"
+
 
 let initialStateEvento:Evento = {
   nombreEvento: "",
@@ -13,25 +15,57 @@ let initialStateEvento:Evento = {
 
 
 export default function Home() {
-  const [evento, setEvento] = useState(initialStateEvento)
+  const [eventoForm, setEventoForm] = useState<Evento>(initialStateEvento)
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [eventoActual, setEventoActual] = useState<{evento: Evento, index: number} | null>(null)
 
+  useEffect(() => {
+  const eventosReg = JSON.parse(localStorage.getItem("eventos") || '[]')
+  if (eventosReg){
+    setEventos(eventosReg)
+    console.log(eventosReg)
+  }
+  
+}, [])
 
-  const handleEvento = (name: string, value: string | number) => {
+  useEffect(() => {
+  localStorage.setItem("eventos", JSON.stringify(eventos))
+}, [eventos])
+
+   const handleEvento = (name: string, value: string | number) => {
     console.log(name)
     console.log(value)
-    setEvento(prev =>
+    setEventoForm(prev =>
       ({...prev, [name]: value}
     )
   )}
+
+  const handleGuardarForm = (evento: Evento) => {
+    if (eventoActual !== null){
+      const actualizarEventos = [...eventos];
+      actualizarEventos[eventoActual.index] = evento;
+      setEventos(actualizarEventos)
+    }
+    else {
+      setEventos([...eventos,evento])
+    }
+    setEventoActual(null)
+    setEventoForm(initialStateEvento);
+
+  }
   return (
     <>
-    <form>
+    <form onSubmit={(e) => {
+      e.preventDefault()
+      handleGuardarForm(eventoForm)
+    }}>
       <br/>
       <label>Nombre del Evento</label>
       <br/>
       <input
         name="nombreEvento"
         type="text"
+        value={eventoForm.nombreEvento}
         onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}/>
       
       <br/>
@@ -40,13 +74,18 @@ export default function Home() {
       <input
       name="participantes"
       type="number"
-      onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}/>
+      value={eventoForm.participantes}
+       onChange={(e) => {
+        const { name, value } = e.currentTarget
+        handleEvento(name, Number(value))}}/>
 
       <br/>
       <label>Descripción</label>
       <br/>
       <textarea
       name="descripcion"
+      placeholder="Descripción del Evento"
+      value={eventoForm.descripcion}
       onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}/>
 
       <br/>
@@ -54,8 +93,10 @@ export default function Home() {
       <br/>
       <select
       name="tipoEvento"
+      value={eventoForm.tipoEvento}
       onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}>
 
+      <option value="">Selecciona un tipo</option>
       <option value="educativo">Educativo</option>
       <option value = "cultural">Cultural</option>
       <option value="deportivo">Deportivo</option>
@@ -67,10 +108,13 @@ export default function Home() {
       <input
       name="fechaEvento"
       type="date"
+      value={eventoForm.fechaEvento}
       onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}/>
       <span></span><br/>
-      <button>Guardar</button>
-    </form>
+      <button type="submit">
+          </button>
+      </form>
+      <MostrarEventos eventos={eventos}/>
     </>
   )
 }
