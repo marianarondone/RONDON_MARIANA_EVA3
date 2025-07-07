@@ -1,15 +1,22 @@
 import React from 'react'
-import { Evento } from './Interfaces/IEvento'
+import { Evento } from '../Interfaces/IEvento'
 
 interface Props {
-  eventos: Evento[]
+  eventos: Evento[];
+  editar: (evento: Evento, index: number) => void;
+  eliminar: (index: number) => void;
 }
 
-const MostrarEventos: React.FC<Props> = ({ eventos }) => {
+export const MostrarEventos = (props: Props) => {
+
+  const queEditar = (evento: Evento, index: number) => {
+    props.editar(evento, index)
+  }
+
   return (
     <>
       <h1>LISTA DE EVENTOS</h1>
-      {eventos.length === 0 ? (
+      {props.eventos.length === 0 ? (
         <p>NO HAY EVENTOS REGISTRADOS</p>
       ) : (
         <table>
@@ -23,13 +30,17 @@ const MostrarEventos: React.FC<Props> = ({ eventos }) => {
             </tr>
           </thead>
           <tbody>
-            {eventos.map((e, index) => (
+            {props.eventos.map((e, index) => (
               <tr key={index}>
                 <td>{e.nombreEvento}</td>
                 <td>{e.participantes}</td>
                 <td>{e.descripcion}</td>
                 <td>{e.tipoEvento}</td>
                 <td>{e.fechaEvento}</td>
+                <td>
+                  <button onClick={() => queEditar(e, index)}>Editar</button>
+                  <button onClick={() => props.eliminar(index)}>Eliminar</button>
+                </td>
               </tr>
             ))}
           </tbody>
