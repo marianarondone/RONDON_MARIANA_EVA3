@@ -4,6 +4,7 @@ import { Evento } from "./Interfaces/IEvento"
 import MostrarEventos from "./Componentes/MostrarEventos"
 
 
+// estado inicial del formulario
 let initialStateEvento:Evento = {
   nombreEvento: "",
   participantes: 0,
@@ -15,12 +16,14 @@ let initialStateEvento:Evento = {
 
 
 export default function Home() {
-  const [eventoForm, setEventoForm] = useState<Evento>(initialStateEvento)
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [eventoActual, setEventoActual] = useState<{evento: Evento, index: number} | null>(null)
-  const [errores, setErrores] = useState<{[ key: string ]: string}>({})
-  const [reg, setReg] = useState(false)
+  const [eventoForm, setEventoForm] = useState<Evento>(initialStateEvento) // estado del formulario (lo que el usuario escribe)
+  const [eventos, setEventos] = useState<Evento[]>([]); // lista de eventos registrados
+  const [eventoActual, setEventoActual] = useState<{evento: Evento, index: number} | null>(null) // guarda el evento y su posicion mientras se esta editando
+  const [errores, setErrores] = useState<{[ key: string ]: string}>({}) // errores de validacion
+  const [reg, setReg] = useState(false) // estado que asegura que las validaciones se ejecuten una vez que se intente registrar un evento
 
+
+  // lee los eventos guardados en el navegador una vez que se carga la pagina
   useEffect(() => {
   const eventosReg = JSON.parse(localStorage.getItem("eventos") || '[]')
   if (eventosReg){
@@ -30,16 +33,19 @@ export default function Home() {
   
 }, [])
 
+// funcion que guarda la lista de eventos cada vez que cambia
   useEffect(() => {
   localStorage.setItem("eventos", JSON.stringify(eventos))
 }, [eventos])
 
+  //maneja los cambios del formulario
    const handleEvento = (name: string, value: string | number) => {
     setEventoForm(prev =>
       ({...prev, [name]: value}))
     setErrores(prev => ({...prev, [name]: ""}))
 }
 
+  // valida el input de cada campo
   const validarFormulario = () => {
     const errores: { [key:string]: string} = {}
 
@@ -68,20 +74,24 @@ export default function Home() {
     }
   }
   setErrores(errores)
-  return Object.keys(errores).length === 0
+  return Object.keys(errores).length === 0 // verifica que no haya errores para asi continuar
   }
 
+  // maneja la accion de guardar un evento
   const handleGuardarForm = (evento: Evento) => {
     setReg(true)
     if (!validarFormulario()) return
+    // actualiza el evento si se esta editando
     if (eventoActual !== null){
       const actualizarEventos = [...eventos];
       actualizarEventos[eventoActual.index] = evento;
       setEventos(actualizarEventos)
     }
+    // si el evento es nuevo lo agrega al final
     else {
       setEventos([...eventos,evento])
     }
+    // limpia todos los campos
     setEventoActual(null)
     setEventoForm(initialStateEvento);
     setErrores({})
@@ -89,15 +99,17 @@ export default function Home() {
 
   }
 
+  // funcion para editar los eventos
   const handleEditar = (evento: Evento, index: number) => {
     setEventoActual({ evento: evento, index:index});
     setEventoForm(evento)
     setErrores({})
   }
-
+  
+  // funcion para eliminar un evento
   const handleEliminar = ( index: number) =>{
     setEventos(eventos.filter((e, indice) => indice !== index));
-    if (eventoActual && eventoActual.index === index) {
+    if (eventoActual && eventoActual.index === index) { //cancela el evento que se estaba editando
       setEventoActual(null);
       setEventoForm(initialStateEvento);
       setErrores({})
@@ -164,11 +176,14 @@ export default function Home() {
       onChange={(e) => handleEvento(e.currentTarget.name, e.currentTarget.value)}/>
       {errores.fechaEvento && <div style={{ color: 'red' }}>{errores.fechaEvento}</div>}
       <span></span><br/>
+      {/* boton que actualiza o registra */}
       <button type="submit">
         {eventoActual ? 'Actualizar Evento' : 'Registrar Evento'}
         </button>
+        {/* boton para cancelar la edicion */}
         {eventoActual && <button type="button" onClick={() => {setEventoActual(null); setEventoForm(initialStateEvento);}}>Cancelar Edición</button>}
       </form>
+      {/* lista de eventos registrados */}
       <MostrarEventos eventos={eventos} editar={handleEditar} eliminar={handleEliminar}/>
     </>
   )
